@@ -1,29 +1,39 @@
 from langgraph.graph import StateGraph, END
 
-def acceuil(state):
-    print ('Welcome to the workflow')
-    return {**state, 'acceuil':True}
+def panier(state):
+    print ('panier validé')
+    return {**state, 'panier':True}
 
-def demander_nom(state):
-    print ('quel est votre nonm?')
-    return {**state, 'nom':input()}
+def verfication_paiement(state):
+    if state['paiement'] == True:
+        return {**state, 'confirmation':True}
+   
 
-def remerciements(state):
-    print (f'Merci pour votre participation {state["nom"]}')
-    return END
+def paiement(state):
+    print ('paiement validé')
+    return {**state, 'paiement':True}
+
+def confirmation(state):
+    print ('commande confirmée')
+    return {**state, 'confirmation':True}
 
 
 workflow = StateGraph(dict)
 
-workflow.add_node('acceuil', acceuil)
-workflow.add_node('demander_nom', demander_nom)
-workflow.add_node('remerciements', remerciements)
+workflow.add_node('panier', panier)
+workflow.add_node('verification_paiement', verfication_paiement)
+workflow.add_node('paiement', paiement)
+workflow.add_node('confirmation', confirmation)
 
-workflow.set_entry_point('acceuil')
+workflow.set_entry_point('panier')
 
-workflow.add_edge('acceuil', 'demander_nom')
-workflow.add_edge('demander_nom', 'remerciements')
-workflow.add_edge('remerciements', END)
+workflow.add_edge('panier', 'verification_paiement')
+workflow.add_conditional_edges(
+    'verification_paiement',
+    lambda x: 'confirmation' if x.get('paiement', False) else 'paiement'
+)
+workflow.add_edge('paiement', 'confirmation')
+workflow.add_edge('confirmation', END)
 
 graph = workflow.compile()
 
